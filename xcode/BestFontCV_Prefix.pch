@@ -1,6 +1,3 @@
-#ifdef __OBJC__
-    #import <Cocoa/Cocoa.h>
-#endif
 
 #if defined( __cplusplus )
 	#include "cinder/Cinder.h"
@@ -13,4 +10,8 @@
 	#include "cinder/Matrix.h"
 	#include "cinder/Vector.h"
 	#include "cinder/Quaternion.h"
+#endif
+
+#ifdef __OBJC__
+#import <Cocoa/Cocoa.h>
 #endif

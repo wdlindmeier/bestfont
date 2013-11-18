@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 44;
+	objectVersion = 46;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -15,11 +15,9 @@
 		5323E6B20EAFCA74003A9687 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B10EAFCA74003A9687 /* CoreVideo.framework */; };
 		5323E6B60EAFCA7E003A9687 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B50EAFCA7E003A9687 /* QTKit.framework */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
-		8586A543D3634091B22A7B6E /* CinderOpenCV.h in Headers */ = {isa = PBXBuildFile; fileRef = E78574AE725C44DE91A5F767 /* CinderOpenCV.h */; };
-		D4393D1E3A314428857D9777 /* BestFontCVApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4AD515D9CD2445CD974F3899 /* BestFontCVApp.cpp */; };
-		B1E7AB610E48481D97106D0E /* BestFontCV_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = B9D107310CA34D2EA71356D4 /* BestFontCV_Prefix.pch */; };
 		A22D71C3698E4860A51D89C1 /* CinderApp.icns in Resources */ = {isa = PBXBuildFile; fileRef = E59191FFD677404281C65872 /* CinderApp.icns */; };
-		D291220244B84842BE249DA1 /* Resources.h in Headers */ = {isa = PBXBuildFile; fileRef = 1DEF922A7AEB41BBA3D711ED /* Resources.h */; };
+		A969C9B0183A92210030569D /* gallagher.jpg in Resources */ = {isa = PBXBuildFile; fileRef = A969C9AF183A92210030569D /* gallagher.jpg */; };
+		D4393D1E3A314428857D9777 /* BestFontCVApp.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4AD515D9CD2445CD974F3899 /* BestFontCVApp.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,17 +27,18 @@
 		00B784B10FF439BC000DE1D7 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = System/Library/Frameworks/AudioUnit.framework; sourceTree = SDKROOT; };
 		00B784B20FF439BC000DE1D7 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		1DEF922A7AEB41BBA3D711ED /* Resources.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Resources.h; path = ../include/Resources.h; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		32CE54F12F8E4FFD8C12BD5B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4AD515D9CD2445CD974F3899 /* BestFontCVApp.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = BestFontCVApp.mm; path = ../src/BestFontCVApp.mm; sourceTree = "<group>"; };
 		5323E6B10EAFCA74003A9687 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = /System/Library/Frameworks/CoreVideo.framework; sourceTree = "<absolute>"; };
 		5323E6B50EAFCA7E003A9687 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = /System/Library/Frameworks/QTKit.framework; sourceTree = "<absolute>"; };
 		8D1107320486CEB800E47090 /* BestFontCV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BestFontCV.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		1DEF922A7AEB41BBA3D711ED /* Resources.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ../include/Resources.h; sourceTree = "<group>"; name = Resources.h; };
-		E59191FFD677404281C65872 /* CinderApp.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = ../resources/CinderApp.icns; sourceTree = "<group>"; name = CinderApp.icns; };
-		32CE54F12F8E4FFD8C12BD5B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; name = Info.plist; };
-		B9D107310CA34D2EA71356D4 /* BestFontCV_Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = "\"\""; path = BestFontCV_Prefix.pch; sourceTree = "<group>"; name = BestFontCV_Prefix.pch; };
-		4AD515D9CD2445CD974F3899 /* BestFontCVApp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; path = ../src/BestFontCVApp.cpp; sourceTree = "<group>"; name = BestFontCVApp.cpp; };
-		E78574AE725C44DE91A5F767 /* CinderOpenCV.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ../blocks/OpenCV/include/CinderOpenCV.h; sourceTree = "<group>"; name = CinderOpenCV.h; };
+		A969C9AF183A92210030569D /* gallagher.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = gallagher.jpg; path = ../resources/gallagher.jpg; sourceTree = "<group>"; };
+		B9D107310CA34D2EA71356D4 /* BestFontCV_Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = "\"\""; path = BestFontCV_Prefix.pch; sourceTree = "<group>"; };
+		E59191FFD677404281C65872 /* CinderApp.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = CinderApp.icns; path = ../resources/CinderApp.icns; sourceTree = "<group>"; };
+		E78574AE725C44DE91A5F767 /* CinderOpenCV.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CinderOpenCV.h; path = ../blocks/OpenCV/include/CinderOpenCV.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,10 +60,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		01B97315FEAEA392516A2CEA /* Blocks */ = {
+			isa = PBXGroup;
+			children = (
+				55FBF6924C72469DADDBCFE8 /* OpenCV */,
+			);
+			name = Blocks;
+			sourceTree = "<group>";
+		};
 		080E96DDFE201D6D7F000001 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				4AD515D9CD2445CD974F3899 /* BestFontCVApp.cpp */,
+				4AD515D9CD2445CD974F3899 /* BestFontCVApp.mm */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -114,6 +121,34 @@
 			name = BestFontCV;
 			sourceTree = "<group>";
 		};
+		29B97315FDCFA39411CA2CEA /* Headers */ = {
+			isa = PBXGroup;
+			children = (
+				1DEF922A7AEB41BBA3D711ED /* Resources.h */,
+				B9D107310CA34D2EA71356D4 /* BestFontCV_Prefix.pch */,
+			);
+			name = Headers;
+			sourceTree = "<group>";
+		};
+		29B97317FDCFA39411CA2CEA /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A969C9AF183A92210030569D /* gallagher.jpg */,
+				E59191FFD677404281C65872 /* CinderApp.icns */,
+				32CE54F12F8E4FFD8C12BD5B /* Info.plist */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
+				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		2A1EFE4CC78241D889AE43F3 /* include */ = {
 			isa = PBXGroup;
 			children = (
@@ -128,41 +163,6 @@
 				2A1EFE4CC78241D889AE43F3 /* include */,
 			);
 			name = OpenCV;
-			sourceTree = "<group>";
-		};
-		01B97315FEAEA392516A2CEA /* Blocks */ = {
-			isa = PBXGroup;
-			children = (
-				55FBF6924C72469DADDBCFE8 /* OpenCV */,
-			);
-			name = Blocks;
-			sourceTree = "<group>";
-		};
-		29B97315FDCFA39411CA2CEA /* Headers */ = {
-			isa = PBXGroup;
-			children = (
-				1DEF922A7AEB41BBA3D711ED /* Resources.h */,
-				B9D107310CA34D2EA71356D4 /* BestFontCV_Prefix.pch */,
-			);
-			name = Headers;
-			sourceTree = "<group>";
-		};
-		29B97317FDCFA39411CA2CEA /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				E59191FFD677404281C65872 /* CinderApp.icns */,
-				32CE54F12F8E4FFD8C12BD5B /* Info.plist */,
-			);
-			name = Resources;
-			sourceTree = "<group>";
-		};
-		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
-				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
-			);
-			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -191,6 +191,8 @@
 /* Begin PBXProject section */
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "BestFontCV" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -216,6 +218,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A22D71C3698E4860A51D89C1 /* CinderApp.icns in Resources */,
+				A969C9B0183A92210030569D /* gallagher.jpg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -226,7 +229,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D4393D1E3A314428857D9777 /* BestFontCVApp.cpp in Sources */,
+				D4393D1E3A314428857D9777 /* BestFontCVApp.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -237,17 +240,17 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				DEAD_CODE_STRIPPING = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = BestFontCV_Prefix.pch;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
 				);
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = BestFontCV_Prefix.pch;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
@@ -271,8 +274,8 @@
 					../blocks/OpenCV/lib/macosx/libopencv_videostab.a,
 				);
 				PRODUCT_NAME = BestFontCV;
-				WRAPPER_EXTENSION = app;
 				SYMROOT = ./build;
+				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
 		};
@@ -312,50 +315,42 @@
 				);
 				PRODUCT_NAME = BestFontCV;
 				STRIP_INSTALLED_PRODUCT = YES;
-				WRAPPER_EXTENSION = app;
 				SYMROOT = ./build;
+				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
 		};
 		C01FCF4F08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
-				CLANG_CXX_LIBRARY = "libc++";
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = i386;
-				CINDER_PATH = "../../../../../Tools/cinder_master";
+				CINDER_PATH = "/Users/bill/Documents/ITP/BIG-Screens/cinder_dev";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "libc++";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/boost\"";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				SDKROOT = macosx;
-				USER_HEADER_SEARCH_PATHS = (
-					"\"$(CINDER_PATH)/include\" ../include",
-					../blocks/OpenCV/include,
-					../blocks/OpenCV/include/opencv2,
-				);
+				USER_HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/include\" ../include ../blocks/OpenCV/include ../blocks/OpenCV/include/opencv2";
 			};
 			name = Debug;
 		};
 		C01FCF5008A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
-				CLANG_CXX_LIBRARY = "libc++";
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = i386;
-				CINDER_PATH = "../../../../../Tools/cinder_master";
+				CINDER_PATH = "/Users/bill/Documents/ITP/BIG-Screens/cinder_dev";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "libc++";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/boost\"";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				SDKROOT = macosx;
-				USER_HEADER_SEARCH_PATHS = (
-					"\"$(CINDER_PATH)/include\" ../include",
-					../blocks/OpenCV/include,
-					../blocks/OpenCV/include/opencv2,
-				);
+				USER_HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/include\" ../include ../blocks/OpenCV/include ../blocks/OpenCV/include/opencv2";
 			};
 			name = Release;
 		};
