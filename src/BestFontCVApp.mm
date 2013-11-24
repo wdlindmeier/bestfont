@@ -18,12 +18,12 @@
 #include "GeneticPopulation.hpp"
 #include "GeneticFont.h"
 #include "GeneUtilities.hpp"
+#include "BestFontConstants.h"
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-const static int kInitialPopulationSize = 100;
 
 class BestFontCVApp : public AppNative
 {
@@ -31,6 +31,7 @@ class BestFontCVApp : public AppNative
     
     BestFontCVApp() : mPopulation(kInitialPopulationSize) {}
     
+    void prepareSettings(Settings *settings);
 	void setup();
 	void draw();
     void mouseDown(MouseEvent event);
@@ -42,15 +43,9 @@ class BestFontCVApp : public AppNative
     Surface         mTargetSurface;
     gl::TextureRef  mTargetTexture;
     
-    cv::Mat         mTargetSelectionMat;
+    Surface8u       mTargetSelectionSurf;
     gl::TextureRef  mTargetSelectionTex;
-    
-    Surface         mTestSurface;
-    gl::TextureRef  mTestTexture;
-    std::string     mTestString;
-    NSArray *       mAvailFonts;
-    int             mFontIndex;
-    
+
     Vec2i           mMousePositionStart;
     Vec2i           mMousePositionEnd;
     Vec2i           mMousePosition;
@@ -62,17 +57,23 @@ class BestFontCVApp : public AppNative
 
 };
 
+void BestFontCVApp::prepareSettings(Settings *settings)
+{
+    settings->setWindowSize(kMaxFontX, kMaxFontY);
+}
+
 void BestFontCVApp::setup()
 {
+    /*
     mFontIndex = 0;
     mAvailFonts = [[NSFontManager sharedFontManager] availableFonts];
     NSLog(@"availFonts: %@", mAvailFonts);
     mTestString = "Quick Fox";
+    */
     
     mTargetSurface = loadImage(loadResource("gallagher.jpg"));
-    mTargetSelectionMat = toOcv(mTargetSurface);
-    gl::Texture *tex = new gl::Texture(fromOcv(mTargetSelectionMat));
-    mTargetSelectionTex = gl::TextureRef(tex);
+    mTargetSelectionSurf = mTargetSurface;
+    mTargetSelectionTex = gl::Texture::create(mTargetSelectionSurf);
     mTargetTexture = gl::Texture::create(mTargetSurface);
     
     mTargetOffset = Vec2i(100,100);
@@ -114,30 +115,19 @@ void BestFontCVApp::mouseUp(MouseEvent event)
     float w = ci::math<float>::clamp(mDrawingRect.getWidth(), 0, inputSize.width - x);
     float h = ci::math<float>::clamp(mDrawingRect.getHeight(), 0, inputSize.height - y);
     cv::Rect cropRect(x, y, w, h);
-    mTargetSelectionMat = targetMat(cropRect);
+    cv::Mat targetSelect = targetMat(cropRect);
     
-    gl::Texture *tex = new gl::Texture(fromOcv(mTargetSelectionMat));
-    mTargetSelectionTex = gl::TextureRef(tex);
+    mTargetSelectionSurf = fromOcv(targetSelect);
+    mTargetSelectionTex = gl::Texture::create(mTargetSelectionSurf);
 }
-
 
 void BestFontCVApp::update()
 {
-    NSString *nextFontName = [mAvailFonts objectAtIndex:mFontIndex];
-    string fontName([nextFontName UTF8String]);
-    Font nextFont(fontName, 32);
-    Surface frameSurf = ci::renderString(mTestString,
-                                         nextFont,
-                                         Color(0,0,0));
-    gl::Texture *nameTex = new gl::Texture(frameSurf);
-    mTestTexture = gl::TextureRef(nameTex);
-    mFontIndex = (mFontIndex + 1) % mAvailFonts.count;
-    
     // Evolution:
     mPopulation.runGeneration([&](GeneticFont & font)// -> float
     {
         // Passes the image into the font for comparison
-        return font.calculateFitnessScalar(mTargetSelectionMat);
+        return font.calculateFitnessScalar(mTargetSelectionSurf);
     });
 }
 
@@ -145,7 +135,6 @@ void BestFontCVApp::draw()
 {
     gl::enableAlphaBlending();
 	gl::clear( Color( 1, 1, 1 ) );
-    gl::draw(mTestTexture);
     
     gl::color(ColorAf(1,1,1,1));
     gl::draw(mTargetTexture, Rectf(mTargetOffset.x,
@@ -163,6 +152,16 @@ void BestFontCVApp::draw()
     
     gl::color(ColorAf(1,1,1,0.5));
     gl::draw(mTargetSelectionTex);
+    
+    // TODO:
+    // Draw the current fittest
+    gl::bindStockShader(gl::ShaderDef().color());
+    gl::color(ColorAf(1,0,0,1));
+    gl::setDefaultShaderVars();
+    
+    assert(mPopulation.getPopulation().size() > 0);
+    GeneticFont & f = mPopulation.getPopulation()[0];
+    f.render();
 }
 
 CINDER_APP_NATIVE( BestFontCVApp, RendererGl )

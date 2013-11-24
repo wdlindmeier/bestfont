@@ -70,5 +70,5 @@ void GeneticBase::mutate()
 
 void GeneticBase::expressGenes()
 {
-    // Does nothing
+    // Does nothing. Call express genes again from the Subclass
 }
