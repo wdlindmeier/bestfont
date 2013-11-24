@@ -15,23 +15,35 @@
 #include "cinder/gl/GlslProg.h"
 #include "CinderOpenCv.h"
 
+#include "GeneticPopulation.hpp"
+#include "GeneticFont.h"
+#include "GeneUtilities.hpp"
+
 using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-class BestFontCVApp : public AppNative {
+const static int kInitialPopulationSize = 100;
+
+class BestFontCVApp : public AppNative
+{
   public:
+    
+    BestFontCVApp() : mPopulation(kInitialPopulationSize) {}
+    
 	void setup();
 	void draw();
     void mouseDown(MouseEvent event);
     void mouseDrag(MouseEvent event);
-    //void mouseMove(MouseEvent event);
-    //void mouseUp(MouseEvent event);
+    void mouseUp(MouseEvent event);
     
     void update();
 	
     Surface         mTargetSurface;
     gl::TextureRef  mTargetTexture;
+    
+    cv::Mat         mTargetSelectionMat;
+    gl::TextureRef  mTargetSelectionTex;
     
     Surface         mTestSurface;
     gl::TextureRef  mTestTexture;
@@ -39,10 +51,14 @@ class BestFontCVApp : public AppNative {
     NSArray *       mAvailFonts;
     int             mFontIndex;
     
-    Vec2i mMousePositionStart;
-    Vec2i mMousePositionEnd;
-    Vec2i mMousePosition;
-    Rectf mDrawingRect;
+    Vec2i           mMousePositionStart;
+    Vec2i           mMousePositionEnd;
+    Vec2i           mMousePosition;
+    Rectf           mDrawingRect;
+    
+    Vec2i           mTargetOffset;
+    
+    GeneticPopulation<GeneticFont> mPopulation;
 
 };
 
@@ -54,7 +70,14 @@ void BestFontCVApp::setup()
     mTestString = "Quick Fox";
     
     mTargetSurface = loadImage(loadResource("gallagher.jpg"));
+    mTargetSelectionMat = toOcv(mTargetSurface);
+    gl::Texture *tex = new gl::Texture(fromOcv(mTargetSelectionMat));
+    mTargetSelectionTex = gl::TextureRef(tex);
     mTargetTexture = gl::Texture::create(mTargetSurface);
+    
+    mTargetOffset = Vec2i(100,100);
+    
+    console() << "mPopulation.size: " << mPopulation.getPopulation().size() << "\n";
 }   
 
 #pragma mark - Mouse Input
@@ -82,35 +105,21 @@ void BestFontCVApp::mouseDrag(MouseEvent event)
     mMousePositionEnd = mMousePosition;
 }
 
-/*
-void BestFontCVApp::mouseMove(MouseEvent event)
-{
-    mMousePosition = event.getPos();
-    mDrawingRect = Rectf(mMousePosition.x, mMousePosition.y,
-                         mMousePosition.x, mMousePosition.y);
-}
 void BestFontCVApp::mouseUp(MouseEvent event)
 {
-    if (mIsAdding)
-    {
-        clearSelection();
-        finishAdding(event);
-    }
-    else if (mIsRemoving)
-    {
-        clearSelection();
-        finishRemoving(event);
-    }
-    else if(mIsJoining)
-    {
-        finishJoining(event);
-    }
-    else
-    {
-        finishRegionSelection(event);
-    }
+    cv::Mat targetMat = toOcv(mTargetSurface);
+    cv::Size inputSize = targetMat.size();
+    float x = ci::math<float>::clamp(mDrawingRect.x1 - mTargetOffset.x, 0, inputSize.width);
+    float y = ci::math<float>::clamp(mDrawingRect.y1 - mTargetOffset.y, 0, inputSize.height);
+    float w = ci::math<float>::clamp(mDrawingRect.getWidth(), 0, inputSize.width - x);
+    float h = ci::math<float>::clamp(mDrawingRect.getHeight(), 0, inputSize.height - y);
+    cv::Rect cropRect(x, y, w, h);
+    mTargetSelectionMat = targetMat(cropRect);
+    
+    gl::Texture *tex = new gl::Texture(fromOcv(mTargetSelectionMat));
+    mTargetSelectionTex = gl::TextureRef(tex);
 }
- */
+
 
 void BestFontCVApp::update()
 {
@@ -123,6 +132,13 @@ void BestFontCVApp::update()
     gl::Texture *nameTex = new gl::Texture(frameSurf);
     mTestTexture = gl::TextureRef(nameTex);
     mFontIndex = (mFontIndex + 1) % mAvailFonts.count;
+    
+    // Evolution:
+    mPopulation.runGeneration([&](GeneticFont & font)// -> float
+    {
+        // Passes the image into the font for comparison
+        return font.calculateFitnessScalar(mTargetSelectionMat);
+    });
 }
 
 void BestFontCVApp::draw()
@@ -131,12 +147,11 @@ void BestFontCVApp::draw()
 	gl::clear( Color( 1, 1, 1 ) );
     gl::draw(mTestTexture);
     
-    Vec2i targetOffset(100,100);
     gl::color(ColorAf(1,1,1,1));
-    gl::draw(mTargetTexture, Rectf(targetOffset.x,
-                                   targetOffset.y,
-                                   targetOffset.x + mTargetTexture->getWidth(),
-                                   targetOffset.y + mTargetTexture->getHeight()));
+    gl::draw(mTargetTexture, Rectf(mTargetOffset.x,
+                                   mTargetOffset.y,
+                                   mTargetOffset.x + mTargetTexture->getWidth(),
+                                   mTargetOffset.y + mTargetTexture->getHeight()));
     
     if (mDrawingRect.getWidth() > 0)
     {
@@ -145,6 +160,9 @@ void BestFontCVApp::draw()
         gl::color(ColorAf(1,1,0,0.5));
         gl::drawSolidRect(mDrawingRect);
     }
+    
+    gl::color(ColorAf(1,1,1,0.5));
+    gl::draw(mTargetSelectionTex);
 }
 
 CINDER_APP_NATIVE( BestFontCVApp, RendererGl )

@@ -17,6 +17,8 @@
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		A22D71C3698E4860A51D89C1 /* CinderApp.icns in Resources */ = {isa = PBXBuildFile; fileRef = E59191FFD677404281C65872 /* CinderApp.icns */; };
 		A969C9B0183A92210030569D /* gallagher.jpg in Resources */ = {isa = PBXBuildFile; fileRef = A969C9AF183A92210030569D /* gallagher.jpg */; };
+		A969C9B3183A9BCF0030569D /* GeneticBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A969C9B1183A9BCF0030569D /* GeneticBase.cpp */; };
+		A969C9B6183A9C3B0030569D /* GeneticFont.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A969C9B4183A9C3B0030569D /* GeneticFont.cpp */; };
 		D4393D1E3A314428857D9777 /* BestFontCVApp.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4AD515D9CD2445CD974F3899 /* BestFontCVApp.mm */; };
 /* End PBXBuildFile section */
 
@@ -36,6 +38,12 @@
 		5323E6B50EAFCA7E003A9687 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = /System/Library/Frameworks/QTKit.framework; sourceTree = "<absolute>"; };
 		8D1107320486CEB800E47090 /* BestFontCV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BestFontCV.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A969C9AF183A92210030569D /* gallagher.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = gallagher.jpg; path = ../resources/gallagher.jpg; sourceTree = "<group>"; };
+		A969C9B1183A9BCF0030569D /* GeneticBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GeneticBase.cpp; path = ../src/GeneticBase.cpp; sourceTree = "<group>"; };
+		A969C9B2183A9BCF0030569D /* GeneticBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GeneticBase.h; path = ../src/GeneticBase.h; sourceTree = "<group>"; };
+		A969C9B4183A9C3B0030569D /* GeneticFont.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GeneticFont.cpp; path = ../src/GeneticFont.cpp; sourceTree = "<group>"; };
+		A969C9B5183A9C3B0030569D /* GeneticFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GeneticFont.h; path = ../src/GeneticFont.h; sourceTree = "<group>"; };
+		A969C9B7183AA1070030569D /* GeneUtilities.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = GeneUtilities.hpp; path = ../include/GeneUtilities.hpp; sourceTree = "<group>"; };
+		A98532901842567500E5C7F3 /* GeneticPopulation.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = GeneticPopulation.hpp; path = ../src/GeneticPopulation.hpp; sourceTree = "<group>"; };
 		B9D107310CA34D2EA71356D4 /* BestFontCV_Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = "\"\""; path = BestFontCV_Prefix.pch; sourceTree = "<group>"; };
 		E59191FFD677404281C65872 /* CinderApp.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = CinderApp.icns; path = ../resources/CinderApp.icns; sourceTree = "<group>"; };
 		E78574AE725C44DE91A5F767 /* CinderOpenCV.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CinderOpenCV.h; path = ../blocks/OpenCV/include/CinderOpenCV.h; sourceTree = "<group>"; };
@@ -72,6 +80,11 @@
 			isa = PBXGroup;
 			children = (
 				4AD515D9CD2445CD974F3899 /* BestFontCVApp.mm */,
+				A969C9B1183A9BCF0030569D /* GeneticBase.cpp */,
+				A969C9B2183A9BCF0030569D /* GeneticBase.h */,
+				A969C9B4183A9C3B0030569D /* GeneticFont.cpp */,
+				A969C9B5183A9C3B0030569D /* GeneticFont.h */,
+				A98532901842567500E5C7F3 /* GeneticPopulation.hpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -126,6 +139,7 @@
 			children = (
 				1DEF922A7AEB41BBA3D711ED /* Resources.h */,
 				B9D107310CA34D2EA71356D4 /* BestFontCV_Prefix.pch */,
+				A969C9B7183AA1070030569D /* GeneUtilities.hpp */,
 			);
 			name = Headers;
 			sourceTree = "<group>";
@@ -229,7 +243,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A969C9B3183A9BCF0030569D /* GeneticBase.cpp in Sources */,
 				D4393D1E3A314428857D9777 /* BestFontCVApp.mm in Sources */,
+				A969C9B6183A9C3B0030569D /* GeneticFont.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
