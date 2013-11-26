@@ -8,11 +8,11 @@
 
 #pragma once
 
-const static float kMutationRate = 0.01;
+const static float kMutationRate = 0.1;
 
 static float RandScalar()
 {
-    return (int)(arc4random() % 10000) * 0.0001;
+    return (int)(arc4random() % 100000) * 0.00001;
 }
 
 static bool RandBool()

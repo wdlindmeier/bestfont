@@ -4,6 +4,7 @@
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
 #include "cinder/Surface.h"
+#include "cinder/Channel.h"
 #include "cinder/Text.h"
 #include "cinder/Shape2d.h"
 #include "cinder/Path2d.h"
@@ -19,6 +20,7 @@
 #include "GeneticFont.h"
 #include "GeneUtilities.hpp"
 #include "BestFontConstants.h"
+#include "GeneticConstraints.hpp"
 
 using namespace ci;
 using namespace ci::app;
@@ -29,7 +31,7 @@ class BestFontCVApp : public AppNative
 {
   public:
     
-    BestFontCVApp() : mPopulation(kInitialPopulationSize) {}
+    BestFontCVApp() : mPopulation(0) {}
     
     void prepareSettings(Settings *settings);
 	void setup();
@@ -37,13 +39,15 @@ class BestFontCVApp : public AppNative
     void mouseDown(MouseEvent event);
     void mouseDrag(MouseEvent event);
     void mouseUp(MouseEvent event);
+    void keyUp(KeyEvent event);
     
     void update();
 	
     Surface         mTargetSurface;
     gl::TextureRef  mTargetTexture;
     
-    Surface8u       mTargetSelectionSurf;
+    //Surface8u       mTargetSelectionSurf;
+    Channel8u       mTargetSelectionChan;
     gl::TextureRef  mTargetSelectionTex;
 
     Vec2i           mMousePositionStart;
@@ -59,22 +63,19 @@ class BestFontCVApp : public AppNative
 
 void BestFontCVApp::prepareSettings(Settings *settings)
 {
-    settings->setWindowSize(kMaxFontX, kMaxFontY);
+    settings->setWindowSize(800, 600);
 }
 
 void BestFontCVApp::setup()
 {
-    /*
-    mFontIndex = 0;
-    mAvailFonts = [[NSFontManager sharedFontManager] availableFonts];
-    NSLog(@"availFonts: %@", mAvailFonts);
-    mTestString = "Quick Fox";
-    */
-    
     mTargetSurface = loadImage(loadResource("gallagher.jpg"));
-    mTargetSelectionSurf = mTargetSurface;
-    mTargetSelectionTex = gl::Texture::create(mTargetSelectionSurf);
+    mTargetSelectionChan = mTargetSurface.getChannelRed();
+    mTargetSelectionTex = gl::Texture::create(Surface8u(mTargetSelectionChan));
     mTargetTexture = gl::Texture::create(mTargetSurface);
+    
+    GeneticConstraintsRef gc = GeneticConstraints::getSharedConstraints();
+    gc->maxPosX = mTargetSelectionChan.getWidth();
+    gc->maxPosY = mTargetSelectionChan.getHeight();
     
     mTargetOffset = Vec2i(100,100);
     
@@ -117,18 +118,37 @@ void BestFontCVApp::mouseUp(MouseEvent event)
     cv::Rect cropRect(x, y, w, h);
     cv::Mat targetSelect = targetMat(cropRect);
     
-    mTargetSelectionSurf = fromOcv(targetSelect);
-    mTargetSelectionTex = gl::Texture::create(mTargetSelectionSurf);
+    Surface8u targetSelectSurf = fromOcv(targetSelect);
+    mTargetSelectionChan = targetSelectSurf.getChannelRed();
+    mTargetSelectionTex = gl::Texture::create(Surface8u(mTargetSelectionChan));
+    GeneticConstraintsRef gc = GeneticConstraints::getSharedConstraints();
+    gc->maxPosX = mTargetSelectionChan.getWidth();
+    gc->maxPosY = mTargetSelectionChan.getHeight();
+}
+
+void BestFontCVApp::keyUp(cinder::app::KeyEvent event)
+{
+    if (event.getChar() == ' ')
+    {
+        console() << "Restarting\n";
+        // Restart
+        mPopulation = GeneticPopulation<GeneticFont>(kInitialPopulationSize);
+    }
 }
 
 void BestFontCVApp::update()
 {
-    // Evolution:
-    mPopulation.runGeneration([&](GeneticFont & font)// -> float
+    if (mPopulation.getPopulation().size() > 0)
     {
-        // Passes the image into the font for comparison
-        return font.calculateFitnessScalar(mTargetSelectionSurf);
-    });
+        console() << "Running generation " << mPopulation.getGenerationCount() << "\n";
+
+        // Evolution:
+        mPopulation.runGeneration([&](GeneticFont & font)// -> float
+        {
+            // Passes the image into the font for comparison
+            return font.calculateFitnessScalar(mTargetSelectionChan);
+        });
+    }
 }
 
 void BestFontCVApp::draw()
@@ -153,15 +173,25 @@ void BestFontCVApp::draw()
     gl::color(ColorAf(1,1,1,0.5));
     gl::draw(mTargetSelectionTex);
     
-    // TODO:
-    // Draw the current fittest
-    gl::bindStockShader(gl::ShaderDef().color());
-    gl::color(ColorAf(1,0,0,1));
-    gl::setDefaultShaderVars();
-    
-    assert(mPopulation.getPopulation().size() > 0);
-    GeneticFont & f = mPopulation.getPopulation()[0];
-    f.render();
+    if (mPopulation.getPopulation().size() > 0)
+    {
+        // Draw the current fittest
+        gl::bindStockShader(gl::ShaderDef().color());
+        gl::color(ColorAf(1,0,0,1));
+        gl::setDefaultShaderVars();
+        
+        GeneticFont & f = mPopulation.getFittestMember();
+        f.render();
+        
+        // Draw the fitness score
+        Surface score = renderString("Fitness:" + to_string(f.getCalculatedFitness()),
+                                     Font("Helvetica", 12),
+                                     ColorAf(0,0,0,1));
+        gl::TextureRef fitnessTex = gl::Texture::create(score);
+        Vec2f texSize = fitnessTex->getSize();
+        gl::draw(fitnessTex, Rectf(10, getWindowHeight() - texSize.y - 10,
+                                   10 + texSize.x, getWindowHeight() - 10));
+    }
 }
 
 CINDER_APP_NATIVE( BestFontCVApp, RendererGl )

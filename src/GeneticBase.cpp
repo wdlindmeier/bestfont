@@ -58,7 +58,6 @@ void GeneticBase::randomizeDNA()
 
 void GeneticBase::mutate()
 {
-    std::vector<float> mDNA;
     for (int i = 0; i < mDNA.size(); ++i)
     {
         if (ShouldMutate())

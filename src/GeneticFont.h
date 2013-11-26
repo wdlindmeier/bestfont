@@ -12,6 +12,7 @@
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
 #include "cinder/Surface.h"
+#include "cinder/Channel.h"
 #include "CinderOpenCv.h"
 #include "BestFontConstants.h"
 #include "GeneticBase.h"
@@ -26,19 +27,19 @@ public:
     virtual ~GeneticFont(){}
     
     virtual void expressGenes();
-    float calculateFitnessScalar(const ci::Surface8u & compareSurf);
+    float calculateFitnessScalar(const ci::Channel8u & compareChan);
+    float getCalculatedFitness();
+    void render();
     // Don't use this:
     float calculateFitnessScalar();
-    void render();
 
 protected:
-    
-    ci::Surface8u       mFrameSurf;
+
+    ci::Channel8u       mChannel;
     ci::Font            mFont;
     float               mFontSize;
     std::string         mFontName;
     std::string         mDisplayText;
     ci::Vec2f           mPosition;
-    cv::Mat             mMat;
-
+    float               mFitness;
 };
