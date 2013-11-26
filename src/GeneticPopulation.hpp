@@ -45,15 +45,15 @@ public:
     
     void runGeneration(std::function<float (T & member)> fitnessEvaluation)
     {
-        float minFitness = 1.f;
-        float maxFitness = 0.f;
+        double minFitness = 999999.0;
+        double maxFitness = -999999.0;
         mGenerationCount++;
 
         // Generate fitness scores
-        std::vector<float> memberFitnesses;
+        std::vector<double> memberFitnesses;
         for (T & m : mPopulation)
         {
-            float memberFitness = fitnessEvaluation(m);
+            double memberFitness = fitnessEvaluation(m);
             memberFitnesses.push_back(memberFitness);
             if (memberFitness < minFitness)
             {
@@ -78,9 +78,9 @@ public:
         std::vector<T> matingPool;
         for (int i = 0; i < memberFitnesses.size(); ++i)
         {
-            float fitness = memberFitnesses[i];
+            double fitness = memberFitnesses[i];
             // NOTE: max possible reproduction count is the same as the population size.
-            int mappedFitness = ci::lmap<float>(fitness, minFitness, maxFitness, 1, mPopulationSize);
+            int mappedFitness = ci::lmap<double>(fitness, minFitness, maxFitness, 1.0, (double)mPopulationSize);
             // Add to the pool N times
             for (int j = 0; j < mappedFitness; ++j)
             {

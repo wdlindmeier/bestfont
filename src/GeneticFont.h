@@ -27,11 +27,11 @@ public:
     virtual ~GeneticFont(){}
     
     virtual void expressGenes();
-    float calculateFitnessScalar(const ci::Channel8u & compareChan);
-    float getCalculatedFitness();
+    double calculateFitnessScalar(const ci::Channel8u & compareChan);
+    double getCalculatedFitness();
     void render();
     // Don't use this:
-    float calculateFitnessScalar();
+    double calculateFitnessScalar();
 
 protected:
 
@@ -41,5 +41,5 @@ protected:
     std::string         mFontName;
     std::string         mDisplayText;
     ci::Vec2f           mPosition;
-    float               mFitness;
+    double              mFitness;
 };

@@ -8,7 +8,7 @@
 
 #pragma once
 
-const static float kMutationRate = 0.1;
+#include "BestFontConstants.h"
 
 static float RandScalar()
 {

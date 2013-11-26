@@ -21,7 +21,7 @@ public:
 
     // Expression must be handled in subclases.
     virtual void expressGenes();
-    virtual float calculateFitnessScalar() = 0;
+    virtual double calculateFitnessScalar() = 0;
     
     std::vector<float> getGenes() const;
     

@@ -60,8 +60,9 @@ void GeneticFont::expressGenes()
     // Position
     float posXGene = mDNA[geneNum++];
     float posYGene = mDNA[geneNum++];
-    mPosition = ci::Vec2f(constraints->maxPosX * posXGene,
-                          constraints->maxPosY * posYGene);
+    // Allowing negative positioning
+    mPosition = ci::Vec2f(((constraints->maxPosX * 2) * posXGene) - constraints->maxPosX,
+                          ((constraints->maxPosY * 2) * posYGene) - constraints->maxPosY);
     
     // Display text
     // TMP: Just hard-coding it for now
@@ -84,10 +85,100 @@ void GeneticFont::expressGenes()
     assert(geneNum == kNumFontGenes);
 }
 
-float GeneticFont::calculateFitnessScalar(const ci::Channel8u & compareChan)
+double GeneticFont::calculateFitnessScalar(const ci::Channel8u & compareChan)
 {
-    Vec2i mySize = mChannel.getSize();
+    // return RandScalar();
     
+    Vec2i mySize = mChannel.getSize();
+    Vec2i targetSize = compareChan.getSize();
+    
+    /*
+    long maxX = std::max<int>(mySize.x,targetSize.x);
+    long maxY = std::max<int>(mySize.y,targetSize.y);
+    long bestScore = maxX * maxY;
+    */
+    
+    long totalScore = 0;
+
+    const static int kPxWhitness = 100;
+    
+    // Iterate over self
+    for (int x = 0; x < mySize.x; ++x)
+    {
+        for (int y = 0; y < mySize.y; ++y)
+        {
+            Vec2i selfPx(x, y);
+            Vec2i targetPx(mPosition.x + x, mPosition.y + y);
+            
+            int selfVal = mChannel.getValue(selfPx);
+            BOOL selfIsBlack = selfVal < kPxWhitness;
+            
+            // Check if there's a sample
+            if (targetPx.x >= 0 &&
+                targetPx.y >= 0 &&
+                targetSize.x > targetPx.x &&
+                targetSize.y > targetPx.y)
+            {
+                // There IS a sample.
+                // Check value
+                int targetVal = compareChan.getValue(targetPx);
+                BOOL targetIsBlack = targetVal < kPxWhitness;
+
+                if ((targetIsBlack && selfIsBlack) ||
+                    (!targetIsBlack && !selfIsBlack))
+                {
+                    // Add score
+                    totalScore += 1;
+                }
+                else
+                {
+                    // Subtract score
+                    totalScore -= 1;
+                }
+            }
+            else
+            {
+                // This is a px
+                // Only subtract if the out-of-bounds px is dark.
+                // It's OK to have whitespace hanging out.
+                if (selfIsBlack)
+                {
+                    // Outside of bounds
+                    // Subtract 2 from score
+                    totalScore -= 2;
+                }
+            }
+        }
+    }
+    
+    // NEXT: Iterate over the target and subtract score for any positive pixels that
+    // exist in the target but not the self
+    for (int x = 0; x < targetSize.x; ++x)
+    {
+        for (int y = 0; y < targetSize.y; ++y)
+        {
+            Vec2i targetPx(x,y);
+            int targetVal = compareChan.getValue(targetPx);
+            // Ignore white pixels
+            if (targetVal < kPxWhitness)
+            {
+                if (x < mPosition.x ||
+                    y < mPosition.y ||
+                    x > (mPosition.x + mySize.x) ||
+                    y > (mPosition.y + mySize.y))
+                {
+                    // This is a positive pixel and it's outside of the range
+                    // of the sample. Subtract 2 from score.
+                    totalScore -= 2;
+                }
+            }
+        }
+    }
+    
+    mFitness = totalScore;//(double)totalScore / (double)bestScore;
+    // ci::app::console() << mFitness << ",";
+    
+    /*
     int sampleWidth = std::min<int>(compareChan.getWidth() - mPosition.x,
                                     mySize.x);
     int sampleHeight = std::min<int>(compareChan.getHeight() - mPosition.y,
@@ -128,23 +219,24 @@ float GeneticFont::calculateFitnessScalar(const ci::Channel8u & compareChan)
             sampleDelta += pxDelta;
         }
     }
-
+    
     float scalarDifference = (double)sampleDelta / (double)maxDelta;
     
     mFitness = 1.0f - scalarDifference;
+    */
     
     // ci::app::console() << mFitness << ", ";
 
     return mFitness;
 }
 
-float GeneticFont::calculateFitnessScalar()
+double GeneticFont::calculateFitnessScalar()
 {
     ci::app::console() << "ERROR: Use calculateFitnessScalar(const cv::Mat & compareMat)" << std::endl;
     throw std::exception();
 }
 
-float GeneticFont::getCalculatedFitness()
+double GeneticFont::getCalculatedFitness()
 {
     return mFitness;
 }
@@ -154,7 +246,7 @@ void GeneticFont::render()
     gl::TextureRef texture = gl::Texture::create(mChannel);
 
     gl::pushMatrices();
-    //gl::translate(mPosition);
+    gl::translate(mPosition);
     gl::draw(texture);
     gl::popMatrices();
 }

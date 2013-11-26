@@ -68,6 +68,8 @@ void BestFontCVApp::prepareSettings(Settings *settings)
 
 void BestFontCVApp::setup()
 {
+    mDrawingRect = Rectf(0,0,0,0);
+    
     mTargetSurface = loadImage(loadResource("gallagher.jpg"));
     mTargetSelectionChan = mTargetSurface.getChannelRed();
     mTargetSelectionTex = gl::Texture::create(Surface8u(mTargetSelectionChan));
@@ -154,7 +156,15 @@ void BestFontCVApp::update()
 void BestFontCVApp::draw()
 {
     gl::enableAlphaBlending();
+    // glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 	gl::clear( Color( 1, 1, 1 ) );
+    
+    if (mDrawingRect.getWidth() > 0)
+    {
+        // Draw the current selection
+        gl::color(ColorAf(1,1,1,1));
+        gl::draw(mTargetSelectionTex);
+    }
     
     gl::color(ColorAf(1,1,1,1));
     gl::draw(mTargetTexture, Rectf(mTargetOffset.x,
@@ -165,23 +175,25 @@ void BestFontCVApp::draw()
     if (mDrawingRect.getWidth() > 0)
     {
         gl::bindStockShader(gl::ShaderDef().color());
-        // Draw the rect
+        // Draw the selection rect
         gl::color(ColorAf(1,1,0,0.5));
         gl::drawSolidRect(mDrawingRect);
     }
     
-    gl::color(ColorAf(1,1,1,0.5));
-    gl::draw(mTargetSelectionTex);
-    
     if (mPopulation.getPopulation().size() > 0)
     {
+        // Multiply
+        glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
         // Draw the current fittest
         gl::bindStockShader(gl::ShaderDef().color());
         gl::color(ColorAf(1,0,0,1));
         gl::setDefaultShaderVars();
         
+        gl::pushMatrices();
+        gl::translate(mDrawingRect.getUpperLeft());
         GeneticFont & f = mPopulation.getFittestMember();
         f.render();
+        gl::popMatrices();
         
         // Draw the fitness score
         Surface score = renderString("Fitness:" + to_string(f.getCalculatedFitness()),
