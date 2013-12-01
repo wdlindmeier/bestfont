@@ -21,6 +21,7 @@
 #include "GeneUtilities.hpp"
 #include "BestFontConstants.h"
 #include "GeneticConstraints.hpp"
+#include "Slider.hpp"
 
 using namespace ci;
 using namespace ci::app;
@@ -41,6 +42,7 @@ class BestFontCVApp : public AppNative
     void            mouseDown(MouseEvent event);
     void            mouseDrag(MouseEvent event);
     void            mouseUp(MouseEvent event);
+    void            updateMutationSliderWithMousePos( Vec2i & mousePos );
     void            keyUp(KeyEvent event);
     void            update();
     std::string     getImageText();
@@ -58,11 +60,15 @@ class BestFontCVApp : public AppNative
     Vec2i           mMousePosition;
     Rectf           mDrawingRect;
     
-    Vec2i           mTargetOffset;
+    Vec2i           mTargetOffsetTop;
+    Vec2i           mTargetOffsetBottom;
     
     GeneticPopulation<GeneticFont> mPopulation;
     
     bool            mShouldAdvance;
+    Vec2f           mDrawFittestOffset;
+    
+    Slider          mSliderMutation;
 
 };
 
@@ -120,7 +126,14 @@ void BestFontCVApp::setup()
     gc->maxPosX = mTargetSelectionChan.getWidth();
     gc->maxPosY = mTargetSelectionChan.getHeight();
     
-    mTargetOffset = Vec2i(100,100);
+    float halfHeight = getWindowHeight() * 0.5;
+    mTargetOffsetTop = Vec2i((getWindowWidth() - mTargetSurface.getWidth()) * 0.5,
+                             (halfHeight - mTargetSurface.getHeight()) * 0.5);
+    mTargetOffsetBottom = mTargetOffsetTop + Vec2f(0, halfHeight);
+    
+    mSliderMutation = Slider(Rectf(10, 10, 200, 30));
+    mSliderMutation.setValue(0.5f);
+
 }
 
 #pragma mark - Population
@@ -143,9 +156,27 @@ static ci::Rectf rectFromTwoPos(const ci::Vec2f & posA, const ci::Vec2f & posB)
     return ci::Rectf(x1, y1, x2, y2);
 }
 
+const static float kMutationSliderMagnitude = 0.01f;
+
+void BestFontCVApp::updateMutationSliderWithMousePos( Vec2i & mousePos )
+{
+    mSliderMutation.update(mousePos);
+    float mutationDelta = (mSliderMutation.getValue() - 0.5f) * kMutationSliderMagnitude;
+    gMutationRate = std::max<float>(0, gMutationRate + mutationDelta);
+}
+
 void BestFontCVApp::mouseDown( MouseEvent event )
 {
-    mMousePositionStart = event.getPos();
+    mMousePosition = event.getPos();
+    mSliderMutation.setIsActive(mSliderMutation.contains(mMousePosition));
+
+    if (mSliderMutation.getIsActive())
+    {
+        updateMutationSliderWithMousePos(mMousePosition);
+        return;
+    }
+    // else
+    mMousePositionStart = mMousePosition;
     mDrawingRect = Rectf(mMousePosition.x, mMousePosition.y,
                          mMousePosition.x, mMousePosition.y);
 }
@@ -153,21 +184,34 @@ void BestFontCVApp::mouseDown( MouseEvent event )
 void BestFontCVApp::mouseDrag(MouseEvent event)
 {
     mMousePosition = event.getPos();
+    if (mSliderMutation.getIsActive())
+    {
+        updateMutationSliderWithMousePos(mMousePosition);
+        return;
+    }
+    // else
     mDrawingRect = rectFromTwoPos(mMousePosition, mMousePositionStart);
     mMousePositionEnd = mMousePosition;
 }
 
 void BestFontCVApp::mouseUp(MouseEvent event)
 {
+    if (mSliderMutation.getIsActive())
+    {
+        mSliderMutation.setValue(0.5f);
+        mSliderMutation.setIsActive(false);
+        return;
+    }
+    // else
     cv::Mat targetMat = toOcv(mTargetSurface);
     cv::Size inputSize = targetMat.size();
-    float x = ci::math<float>::clamp(mDrawingRect.x1 - mTargetOffset.x, 0, inputSize.width);
-    float y = ci::math<float>::clamp(mDrawingRect.y1 - mTargetOffset.y, 0, inputSize.height);
+    float x = ci::math<float>::clamp(mDrawingRect.x1 - mTargetOffsetTop.x, 0, inputSize.width);
+    float y = ci::math<float>::clamp(mDrawingRect.y1 - mTargetOffsetTop.y, 0, inputSize.height);
     float w = ci::math<float>::clamp(mDrawingRect.getWidth(), 0, inputSize.width - x);
     float h = ci::math<float>::clamp(mDrawingRect.getHeight(), 0, inputSize.height - y);
     if (w <= 0 || h <= 0)
     {
-        // Abort selection
+        // Abort selectionx
         mDrawingRect = Rectf(0,0,0,0);
         return;
     }
@@ -209,6 +253,9 @@ void BestFontCVApp::mouseUp(MouseEvent event)
         mTargetSelectionChan = croppedChannel;
     }
     
+    float halfHeight = getWindowHeight() * 0.5f;
+    mDrawFittestOffset = mDrawingRect.getUpperLeft() + Vec2f(minX, minY + halfHeight);
+    
     mTargetSelectionTex = gl::Texture::create(Surface8u(mTargetSelectionChan));
     GeneticConstraintsRef gc = GeneticConstraints::getSharedConstraints();
     gc->maxPosX = mTargetSelectionChan.getWidth();
@@ -240,6 +287,11 @@ void BestFontCVApp::keyUp(cinder::app::KeyEvent event)
 
 void BestFontCVApp::update()
 {
+    if (mSliderMutation.getIsActive())
+    {
+        updateMutationSliderWithMousePos(mMousePosition);
+    }
+
     if (mPopulation.getPopulation().size() > 0)
     {
         if (mShouldAdvance)
@@ -273,110 +325,138 @@ void BestFontCVApp::draw()
     gl::enableAlphaBlending();
     // glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 	gl::clear( Color( 1, 1, 1 ) );
-    
+
+    /*
     if (mDrawingRect.getWidth() > 0)
     {
         // Draw the current selection
         gl::color(ColorAf(0,1,1,0.5));
         gl::draw(mTargetSelectionTex);
     }
+    */
     
     gl::color(ColorAf(1,1,1,1));
-    gl::draw(mTargetTexture, Rectf(mTargetOffset.x,
-                                   mTargetOffset.y,
-                                   mTargetOffset.x + mTargetTexture->getWidth(),
-                                   mTargetOffset.y + mTargetTexture->getHeight()));
+    gl::draw(mTargetTexture, Rectf(mTargetOffsetTop.x,
+                                   mTargetOffsetTop.y,
+                                   mTargetOffsetTop.x + mTargetTexture->getWidth(),
+                                   mTargetOffsetTop.y + mTargetTexture->getHeight()));
+
     
+    float halfHeight = getWindowHeight() * 0.5;
+    Rectf maskRect = mDrawingRect;
+    maskRect.y1 += halfHeight;
+    maskRect.y2 += halfHeight;
+
+    gl::bindStockShader(gl::ShaderDef().color());
+
     if (mDrawingRect.getWidth() > 0)
     {
-        gl::bindStockShader(gl::ShaderDef().color());
+        gl::draw(mTargetTexture, Rectf(mTargetOffsetBottom.x,
+                                       mTargetOffsetBottom.y,
+                                       mTargetOffsetBottom.x + mTargetTexture->getWidth(),
+                                       mTargetOffsetBottom.y + mTargetTexture->getHeight()));
+        // Draw the mask
+        gl::disableAlphaBlending();
+        gl::color(1,1,1,1);
+        gl::drawSolidRect(maskRect);
+        gl::enableAlphaBlending();
+
         // Draw the selection rect
         gl::color(ColorAf(1,1,0,0.5));
         gl::drawSolidRect(mDrawingRect);
+    
+        if (mPopulation.getPopulation().size() > 0)
+        {
+            // gl::setDefaultShaderVars();
+            gl::color(ColorAf(1,1,1,1));
+            
+            gl::pushMatrices();
+            GeneticFont & f = mPopulation.getFittestMember();
+            // Draw it over the mask
+            gl::translate(mDrawFittestOffset);
+            f.render();
+            gl::popMatrices();
+            
+            gl::enableAlphaBlending();
+
+            Vec2f outpOffset(600, 15);
+            
+            gl::pushMatrices();
+            gl::translate(outpOffset);
+            
+            const float kLineHeight = 20;
+            float yOff = 0;
+
+            Surface genCount = renderString("Generation: " + std::to_string(mPopulation.getGenerationCount()),
+                                            Font("Helvetica", 12),
+                                            ColorAf(0,0,0,1));
+            gl::TextureRef genTex = gl::Texture::create(genCount);
+            Vec2f texSize = genTex->getSize();
+            gl::draw(genTex, Rectf(0,
+                                   yOff,
+                                   texSize.x,
+                                   yOff + texSize.y));
+
+            yOff += kLineHeight;
+            
+            Surface score = renderString("Fitness: " + to_string(f.getCalculatedFitness()),
+                                         Font("Helvetica", 12),
+                                         ColorAf(0,0,0,1));
+            gl::TextureRef fitnessTex = gl::Texture::create(score);
+            texSize = fitnessTex->getSize();
+            gl::draw(fitnessTex, Rectf(0,
+                                       yOff,
+                                       texSize.x,
+                                       yOff + texSize.y));
+            
+            yOff += kLineHeight;
+            
+            Surface fontName = renderString(f.getFontName(),
+                                            Font("Helvetica", 12),
+                                            ColorAf(0,0,0,1));
+            gl::TextureRef nameTex = gl::Texture::create(fontName);
+            texSize = nameTex->getSize();
+            gl::draw(nameTex, Rectf(0,
+                                    yOff,
+                                    texSize.x,
+                                    yOff + texSize.y));
+
+            yOff += kLineHeight;
+            
+            Surface fontSize = renderString("Font Size: " + std::to_string(f.getFontSize()),
+                                            Font("Helvetica", 12),
+                                            ColorAf(0,0,0,1));
+            gl::TextureRef sizeTex = gl::Texture::create(fontSize);
+            texSize = sizeTex->getSize();
+            gl::draw(sizeTex, Rectf(0,
+                                    yOff,
+                                    texSize.x,
+                                    yOff + texSize.y));
+            gl::popMatrices();
+        }
     }
     
-    if (mPopulation.getPopulation().size() > 0)
-    {
-        // Multiply
-        glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
-        
-        // Draw the current fittest
-        gl::bindStockShader(gl::ShaderDef().color());
-        gl::color(ColorAf(1,0,0,0.5));
-        gl::setDefaultShaderVars();
-        
-        gl::pushMatrices();
-        //gl::translate(mDrawingRect.getUpperLeft());
-        GeneticFont & f = mPopulation.getFittestMember();
-        f.render();
-        gl::popMatrices();
-        
-        gl::enableAlphaBlending();
-        gl::color(ColorAf(1,1,1,1));
-        gl::pushMatrices();
-        gl::translate(Vec2f(0,300));
-        
-        /*
-        long fitness = f.getCalculatedFitness();
-        if (fitness > -100)
-        {
-            mShouldAdvance = false;
-        }
-        */
-        
-        // Draw the fitness score
-        Surface score = renderString("Fitness:" + to_string(f.getCalculatedFitness()),
-                                     Font("Helvetica", 12),
-                                     ColorAf(0,0,0,1));
-        gl::TextureRef fitnessTex = gl::Texture::create(score);
-        Vec2f texSize = fitnessTex->getSize();
-        gl::draw(fitnessTex, Rectf(500,
-                                   30,
-                                   500 + texSize.x,
-                                   30 + texSize.y));
-        
-        Surface fontName = renderString(f.getFontName(),
-                                        Font("Helvetica", 12),
-                                        ColorAf(0,0,0,1));
-        gl::TextureRef nameTex = gl::Texture::create(fontName);
-        texSize = nameTex->getSize();
-        gl::draw(nameTex, Rectf(500,
-                                   50,
-                                   500 + texSize.x,
-                                   50 + texSize.y));
-
-        Surface fontSize = renderString(std::to_string(f.getFontSize()),
-                                        Font("Helvetica", 12),
-                                        ColorAf(0,0,0,1));
-        gl::TextureRef sizeTex = gl::Texture::create(fontSize);
-        texSize = sizeTex->getSize();
-        gl::draw(sizeTex, Rectf(500,
-                                   70,
-                                   500 + texSize.x,
-                                   70 + texSize.y));
-        /*
-        Surface fontPos = renderString(std::to_string(f.getPosition().x) + "," + std::to_string(f.getPosition().y),
-                                        Font("Helvetica", 12),
-                                        ColorAf(0,0,0,1));
-        gl::TextureRef posTex = gl::Texture::create(fontPos);
-        texSize = posTex->getSize();
-        gl::draw(posTex, Rectf(500,
-                                90,
-                                500 + texSize.x,
-                                90 + texSize.y));
-        */
-        Surface mutRate = renderString("Mutation: " + std::to_string(gMutationRate),
-                                       Font("Helvetica", 12),
-                                       ColorAf(0,0,0,1));
-        gl::TextureRef mutTex = gl::Texture::create(mutRate);
-        texSize = mutTex->getSize();
-        gl::draw(mutTex, Rectf(500,
-                               110,
-                               500 + texSize.x,
-                               110 + texSize.y));
-
-        gl::popMatrices();
-    }
+    // Splitting line
+    gl::color(Color(0.5,0.5,0.5));
+    gl::drawSolidRect(Rectf(0,
+                            halfHeight,
+                            getWindowWidth(),
+                            halfHeight + 1));
+    
+    // Render slider
+    mSliderMutation.render(true);
+    
+    Surface mutRate = renderString("Mutation: " + std::to_string(gMutationRate),
+                                   Font("Helvetica", 12),
+                                   ColorAf(0,0,0,1));
+    gl::TextureRef mutTex = gl::Texture::create(mutRate);
+    Vec2f texSize = mutTex->getSize();
+    gl::draw(mutTex, Rectf(250,
+                           15,
+                           250 + texSize.x,
+                           15 + texSize.y));
+    
+    
 }
 
 CINDER_APP_NATIVE( BestFontCVApp, RendererGl )

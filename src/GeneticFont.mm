@@ -267,6 +267,8 @@ double GeneticFont::getCalculatedFitness()
 
 void GeneticFont::render()
 {
-    gl::TextureRef texture = gl::Texture::create(mChannel);
+    // Convert to surf first so it's grayscale, not red
+    Surface surf(mChannel);
+    gl::TextureRef texture = gl::Texture::create(surf);
     gl::draw(texture);
 }
