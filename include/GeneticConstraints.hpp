@@ -24,12 +24,14 @@ public:
     maxPosX(0.f)
     ,maxPosY(0.f)
     ,maxFontSize(150.f)
+    ,maxCharacters(20)
     {};
     ~GeneticConstraints(){};
     
     float maxPosX;
     float maxPosY;
     float maxFontSize;
+    int maxCharacters;
     
     // Singleton
     static GeneticConstraintsRef getSharedConstraints()

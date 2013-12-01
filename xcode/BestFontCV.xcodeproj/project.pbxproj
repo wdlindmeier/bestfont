@@ -19,6 +19,7 @@
 		A969C9B0183A92210030569D /* gallagher.jpg in Resources */ = {isa = PBXBuildFile; fileRef = A969C9AF183A92210030569D /* gallagher.jpg */; };
 		A969C9B3183A9BCF0030569D /* GeneticBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A969C9B1183A9BCF0030569D /* GeneticBase.cpp */; };
 		A969C9B6183A9C3B0030569D /* GeneticFont.mm in Sources */ = {isa = PBXBuildFile; fileRef = A969C9B4183A9C3B0030569D /* GeneticFont.mm */; };
+		A9C5968A18453DAA00C8DBDC /* gallagher_screenshot.png in Resources */ = {isa = PBXBuildFile; fileRef = A9C5968918453DAA00C8DBDC /* gallagher_screenshot.png */; };
 		D4393D1E3A314428857D9777 /* BestFontCVApp.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4AD515D9CD2445CD974F3899 /* BestFontCVApp.mm */; };
 /* End PBXBuildFile section */
 
@@ -46,6 +47,7 @@
 		A98532901842567500E5C7F3 /* GeneticPopulation.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = GeneticPopulation.hpp; path = ../src/GeneticPopulation.hpp; sourceTree = "<group>"; };
 		A9C595DC184273B000C8DBDC /* BestFontConstants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BestFontConstants.h; path = ../include/BestFontConstants.h; sourceTree = "<group>"; };
 		A9C596881844F1B900C8DBDC /* GeneticConstraints.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = GeneticConstraints.hpp; path = ../include/GeneticConstraints.hpp; sourceTree = "<group>"; };
+		A9C5968918453DAA00C8DBDC /* gallagher_screenshot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = gallagher_screenshot.png; path = ../resources/gallagher_screenshot.png; sourceTree = "<group>"; };
 		B9D107310CA34D2EA71356D4 /* BestFontCV_Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = "\"\""; path = BestFontCV_Prefix.pch; sourceTree = "<group>"; };
 		E59191FFD677404281C65872 /* CinderApp.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = CinderApp.icns; path = ../resources/CinderApp.icns; sourceTree = "<group>"; };
 		E78574AE725C44DE91A5F767 /* CinderOpenCV.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CinderOpenCV.h; path = ../blocks/OpenCV/include/CinderOpenCV.h; sourceTree = "<group>"; };
@@ -151,6 +153,7 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				A9C5968918453DAA00C8DBDC /* gallagher_screenshot.png */,
 				A969C9AF183A92210030569D /* gallagher.jpg */,
 				E59191FFD677404281C65872 /* CinderApp.icns */,
 				32CE54F12F8E4FFD8C12BD5B /* Info.plist */,
@@ -235,6 +238,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A9C5968A18453DAA00C8DBDC /* gallagher_screenshot.png in Resources */,
 				A22D71C3698E4860A51D89C1 /* CinderApp.icns in Resources */,
 				A969C9B0183A92210030569D /* gallagher.jpg in Resources */,
 			);

@@ -22,5 +22,5 @@ static bool RandBool()
 
 static bool ShouldMutate()
 {
-    return RandScalar() < kMutationRate;
+    return RandScalar() < gMutationRate;
 }

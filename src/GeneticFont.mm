@@ -16,21 +16,61 @@ using namespace std;
 using namespace ci;
 using namespace ci::gl;
 
+// Decides if the app should try to match the text content as well
+#define USE_OCR 0
+
+const static char AvailableCharCount = 63;
+const static char AvailableChars[AvailableCharCount] = {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z', 'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z', ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+
 // NOTE: How can this elegantly track the amount of genes we actually use/need?
-const static int kNumFontGenes = 4;
+#if USE_OCR
+const static int kNumFontGenes = 23;
+#else 
+const static int kNumFontGenes = 2; // Wow, this is tiny
+#endif
 
 GeneticFont::GeneticFont() : GeneticBase(kNumFontGenes)
 {
+    if (gDisplayString == "")
+    {
+        ci::app::console() << "Ignoring font. Display string is empty.\n";
+        return;
+    }
+    
+    // Get the global display string. What's a better pattern w/out using a global?
+    setDisplayText(gDisplayString);
+    
+    // Get the display text from a global.
+    // It aint pretty, but I'm not sure what the best generic pattern would be.
     expressGenes();
 }
 
 GeneticFont::GeneticFont(const GeneticFont & gA, const GeneticFont & gB) :
 GeneticBase(gA, gB)
 {
+    if (gDisplayString == "")
+    {
+        ci::app::console() << "Ignoring font. Display string is empty.\n";
+        return;
+    }
+
+    // Get the global display string. What's a better pattern w/out using a global?
+    setDisplayText(gDisplayString);
+    
     // Let the super handle the crossover.
     // Just swapping numbers.
     expressGenes();
 };
+
+std::string GeneticFont::getDisplayText() const
+{
+    return mDisplayText;
+}
+
+void GeneticFont::setDisplayText(const std::string & text)
+{
+    mDisplayText = text;
+}
 
 void GeneticFont::expressGenes()
 {
@@ -57,16 +97,22 @@ void GeneticFont::expressGenes()
     mFontName = string([nsFontName UTF8String]);
     mFont = Font(mFontName, mFontSize);
 
-    // Position
-    float posXGene = mDNA[geneNum++];
-    float posYGene = mDNA[geneNum++];
-    // Allowing negative positioning
-    mPosition = ci::Vec2f(((constraints->maxPosX * 2) * posXGene) - constraints->maxPosX,
-                          ((constraints->maxPosY * 2) * posYGene) - constraints->maxPosY);
-    
+#if USE_OCR
     // Display text
-    // TMP: Just hard-coding it for now
-    mDisplayText = "GALLAGHER";
+    float fontNumChars = mDNA[geneNum++];
+    mNumChars = (int)(fontNumChars * constraints->maxCharacters) + 1;
+    mDisplayText = "";
+    for (int i = 0; i < constraints->maxCharacters; ++i)
+    {
+        float charGene = mDNA[geneNum++];
+        if (i < mNumChars)
+        {
+            int charIdx = (int)(charGene * AvailableCharCount);
+            mDisplayText += AvailableChars[charIdx];
+        }
+        // Don't break. We want all of the char genes to get used.
+    }
+#endif
 
     // Generate the image
     Surface8u textSurf = ci::renderString(mDisplayText, mFont, Color(0,0,0));
@@ -75,10 +121,35 @@ void GeneticFont::expressGenes()
     
     // Invert the channel for more intuitive comparison & drawing
     Channel::Iter iter = mChannel.getIter(Area(0,0,textSurf.getWidth(),textSurf.getHeight()));
-    while( iter.line() ) {
-        while( iter.pixel() ) {
-            iter.v() = 255 - iter.v();
+    int minX = 16000;
+    int minY = 16000;
+    int maxX = 0;
+    int maxY = 0;
+    while( iter.line() )
+    {
+        while( iter.pixel() )
+        {
+            int invertedVal = 255 - iter.v();
+            if (invertedVal < kPxWhitness)
+            {
+                // This is a pixel
+                if (iter.x() < minX) minX = iter.x();
+                if (iter.x() > maxX) maxX = iter.x();
+                if (iter.y() < minY) minY = iter.y();
+                if (iter.y() > maxY) maxY = iter.y();
+            }
+            iter.v() = invertedVal;
         }
+    }
+    if (minX < maxX && minY < maxY)
+    {
+        int width = maxX - minX;
+        int height = maxY - minY;
+        Channel8u croppedChannel(width, height);
+        croppedChannel.copyFrom(mChannel,
+                                Area(Vec2i(minX, minY), Vec2i(maxX, maxY)),
+                                Vec2i(-minX, -minY));
+        mChannel = croppedChannel;
     }
 
     // Verify that the gene count is accurate
@@ -87,31 +158,34 @@ void GeneticFont::expressGenes()
 
 double GeneticFont::calculateFitnessScalar(const ci::Channel8u & compareChan)
 {
-    // return RandScalar();
-    
     Vec2i mySize = mChannel.getSize();
     Vec2i targetSize = compareChan.getSize();
     
-    /*
-    long maxX = std::max<int>(mySize.x,targetSize.x);
-    long maxY = std::max<int>(mySize.y,targetSize.y);
-    long bestScore = maxX * maxY;
-    */
-    
-    long totalScore = 0;
+    // Give value for being the same size.
+    mFitness = (abs(targetSize.x - mySize.x) + abs(targetSize.y - mySize.y)) * -1;
 
-    const static int kPxWhitness = 100;
+    long totalScore = 0;
+    //long numSamplePx = 0;
+    //long numTargetPx = 0;
     
-    // Iterate over self
+    // Iterate over self.
+    // Compare pixels.
     for (int x = 0; x < mySize.x; ++x)
     {
         for (int y = 0; y < mySize.y; ++y)
         {
             Vec2i selfPx(x, y);
-            Vec2i targetPx(mPosition.x + x, mPosition.y + y);
+            Vec2i targetPx(x, y);
             
             int selfVal = mChannel.getValue(selfPx);
             BOOL selfIsBlack = selfVal < kPxWhitness;
+            
+            /*
+            if (selfIsBlack)
+            {
+                numSamplePx += 1;
+            }
+            */
             
             // Check if there's a sample
             if (targetPx.x >= 0 &&
@@ -124,110 +198,60 @@ double GeneticFont::calculateFitnessScalar(const ci::Channel8u & compareChan)
                 int targetVal = compareChan.getValue(targetPx);
                 BOOL targetIsBlack = targetVal < kPxWhitness;
 
-                if ((targetIsBlack && selfIsBlack) ||
-                    (!targetIsBlack && !selfIsBlack))
+                if (targetIsBlack == selfIsBlack)
                 {
-                    // Add score
+                    // Add score if there's a pixel match
                     totalScore += 1;
                 }
                 else
                 {
-                    // Subtract score
+                    // Subtract score of they aren't the same
                     totalScore -= 1;
                 }
             }
             else
             {
-                // This is a px
-                // Only subtract if the out-of-bounds px is dark.
-                // It's OK to have whitespace hanging out.
-                if (selfIsBlack)
-                {
-                    // Outside of bounds
-                    // Subtract 2 from score
-                    totalScore -= 2;
-                }
+                // Outside of bounds
+                // This should be accounted for in the size weight above.
+                // totalScore -= 1;
             }
         }
     }
-    
-    // NEXT: Iterate over the target and subtract score for any positive pixels that
-    // exist in the target but not the self
+    /*
+    // Just counting pixels
     for (int x = 0; x < targetSize.x; ++x)
     {
         for (int y = 0; y < targetSize.y; ++y)
         {
             Vec2i targetPx(x,y);
             int targetVal = compareChan.getValue(targetPx);
-            // Ignore white pixels
-            if (targetVal < kPxWhitness)
+
+            BOOL targetIsPx = targetVal < kPxWhitness;
+            if (targetIsPx)
             {
-                if (x < mPosition.x ||
-                    y < mPosition.y ||
-                    x > (mPosition.x + mySize.x) ||
-                    y > (mPosition.y + mySize.y))
-                {
-                    // This is a positive pixel and it's outside of the range
-                    // of the sample. Subtract 2 from score.
-                    totalScore -= 2;
-                }
+                numTargetPx += 1;
             }
+            // Not adding or subtracting score: That should be accounted for in the size weight.
         }
     }
-    
-    mFitness = totalScore;//(double)totalScore / (double)bestScore;
-    // ci::app::console() << mFitness << ",";
-    
-    /*
-    int sampleWidth = std::min<int>(compareChan.getWidth() - mPosition.x,
-                                    mySize.x);
-    int sampleHeight = std::min<int>(compareChan.getHeight() - mPosition.y,
-                                     mySize.y);
-    
-    long numSamplePx = sampleWidth * sampleHeight;
-    long numSelfPx = mySize.x * mySize.y;
-
-    // maxDelta is the theoretically inverted image
-    long maxDelta = 255 * numSamplePx;
-    long sampleDelta = 0;
-    
-    //if (numSelfPx != numSamplePx)
-    {
-        // Also subtract values for any pixels that over/under lap
-        
-        // TODO: This should ONLY penalize underlapping pixels that
-        // ignore actual text pixels.
-        // (i.e.) There should be no penalty for the user over selecting the bounds.
-        
-        long unsampledDelta = 255 * abs(numSelfPx - numSamplePx);
-        maxDelta += unsampledDelta;
-        sampleDelta += unsampledDelta;
-    }
-
-    // Sample the overlapping pixels
-    for (int x = 0; x < sampleWidth; ++x)
-    {
-        for (int y = 0; y < sampleHeight; ++y)
-        {
-            // IMPORTANT: Add the offset to the compareSurf sample point.
-            Vec2i targetPx(mPosition.x + x, mPosition.y + y);
-            Vec2i selfPx(x, y);
-            
-            int targetVal = compareChan.getValue(targetPx);
-            int selfVal = mChannel.getValue(selfPx);
-            int pxDelta = abs(targetVal - selfVal);
-            sampleDelta += pxDelta;
-        }
-    }
-    
-    float scalarDifference = (double)sampleDelta / (double)maxDelta;
-    
-    mFitness = 1.0f - scalarDifference;
     */
+    mFitness += totalScore;
     
-    // ci::app::console() << mFitness << ", ";
-
+    // Make it scalar.
+    // This prevents giving small candidates an advantage.
+    mFitness = (double)mFitness / (double)(mySize.x * mySize.y);
+    
     return mFitness;
+}
+
+std::string GeneticFont::getFontName()
+{
+    return mFontName;
+}
+
+float GeneticFont::getFontSize()
+{
+    return mFontSize;
 }
 
 double GeneticFont::calculateFitnessScalar()
@@ -244,9 +268,5 @@ double GeneticFont::getCalculatedFitness()
 void GeneticFont::render()
 {
     gl::TextureRef texture = gl::Texture::create(mChannel);
-
-    gl::pushMatrices();
-    gl::translate(mPosition);
     gl::draw(texture);
-    gl::popMatrices();
 }

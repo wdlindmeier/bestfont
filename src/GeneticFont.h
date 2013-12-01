@@ -32,6 +32,11 @@ public:
     void render();
     // Don't use this:
     double calculateFitnessScalar();
+    
+    std::string getFontName();
+    std::string getDisplayText() const;
+    void setDisplayText(const std::string & text);
+    float getFontSize();
 
 protected:
 
@@ -40,6 +45,7 @@ protected:
     float               mFontSize;
     std::string         mFontName;
     std::string         mDisplayText;
-    ci::Vec2f           mPosition;
     double              mFitness;
+    int                 mNumChars;
+    
 };
