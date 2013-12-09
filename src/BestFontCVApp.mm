@@ -48,6 +48,8 @@ class BestFontCVApp : public AppNative
     std::string     getImageText();
     int             displayInstructions();
     void            restartPopulation();
+    void            pickFile();
+    void            drawMetadata(const Vec2f & offset);
 	
     Surface         mTargetSurface;
     gl::TextureRef  mTargetTexture;
@@ -69,12 +71,18 @@ class BestFontCVApp : public AppNative
     Vec2f           mDrawFittestOffset;
     
     Slider          mSliderMutation;
+    
+    gl::TextureRef  mButtonTexture;
+    
+    bool            mDidPickFile;
+    bool            mDidDrawImage;
 
 };
 
 void BestFontCVApp::prepareSettings(Settings *settings)
 {
     settings->setWindowSize(800, 600);
+    settings->setWindowPos(100, 100);
 }
 
 std::string BestFontCVApp::getImageText()
@@ -112,9 +120,14 @@ void BestFontCVApp::setup()
 {
     mDrawingRect = Rectf(0,0,0,0);
     mShouldAdvance = false;
-    
     gMutationRate = 0.05f;
+    mButtonTexture = gl::Texture::create(loadImage(getResourcePath("button_pick.png")));
+    mDidPickFile = false;
+    mDidDrawImage = false;
+}
 
+void BestFontCVApp::pickFile()
+{
     fs::path filePath = getOpenFilePath();
     mTargetSurface = loadImage(filePath);
     
@@ -131,9 +144,10 @@ void BestFontCVApp::setup()
                              (halfHeight - mTargetSurface.getHeight()) * 0.5);
     mTargetOffsetBottom = mTargetOffsetTop + Vec2f(0, halfHeight);
     
-    mSliderMutation = Slider(Rectf(10, 10, 200, 30));
+    float sliderY = (getWindowHeight() * 0.5) + 10;
+    mSliderMutation = Slider(Rectf(10, sliderY, 200, sliderY + 20));
     mSliderMutation.setValue(0.5f);
-
+    mDidPickFile = true;
 }
 
 #pragma mark - Population
@@ -168,6 +182,13 @@ void BestFontCVApp::updateMutationSliderWithMousePos( Vec2i & mousePos )
 void BestFontCVApp::mouseDown( MouseEvent event )
 {
     mMousePosition = event.getPos();
+    
+    if (!mDidPickFile)
+    {
+        pickFile();
+        return;
+    }
+    
     mSliderMutation.setIsActive(mSliderMutation.contains(mMousePosition));
 
     if (mSliderMutation.getIsActive())
@@ -309,7 +330,7 @@ void BestFontCVApp::update()
     }
     
     // Waiting to prompt user until the image has been drawn so they can reference it.
-    if (getElapsedFrames() > 1 && gDisplayString == "")
+    if (mDidPickFile && mDidDrawImage && gDisplayString == "")
     {
         while (gDisplayString == "")
         {
@@ -323,24 +344,31 @@ void BestFontCVApp::update()
 void BestFontCVApp::draw()
 {
     gl::enableAlphaBlending();
-    // glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-	gl::clear( Color( 1, 1, 1 ) );
-
-    /*
-    if (mDrawingRect.getWidth() > 0)
-    {
-        // Draw the current selection
-        gl::color(ColorAf(0,1,1,0.5));
-        gl::draw(mTargetSelectionTex);
-    }
-    */
-    
+    gl::clear(Color( 1, 1, 1 ));
     gl::color(ColorAf(1,1,1,1));
+    
+    // Draw the button if we haven't picked a file
+    if (!mDidPickFile)
+    {
+        Vec2f buttonSize = mButtonTexture->getSize();
+        
+        Vec2f buttonPos((getWindowWidth() * 0.5) - (buttonSize.x * 0.5),
+                        (getWindowHeight() * 0.5) - (buttonSize.y * 0.5));
+        
+        gl::draw(mButtonTexture, Rectf(buttonPos.x,
+                                       buttonPos.y,
+                                       buttonPos.x + buttonSize.x,
+                                       buttonPos.y + buttonSize.y));
+        return;
+    }
+    
+    // Draw the selected image
+    mDidDrawImage = true;
+
     gl::draw(mTargetTexture, Rectf(mTargetOffsetTop.x,
                                    mTargetOffsetTop.y,
                                    mTargetOffsetTop.x + mTargetTexture->getWidth(),
                                    mTargetOffsetTop.y + mTargetTexture->getHeight()));
-
     
     float halfHeight = getWindowHeight() * 0.5;
     Rectf maskRect = mDrawingRect;
@@ -349,6 +377,8 @@ void BestFontCVApp::draw()
 
     gl::bindStockShader(gl::ShaderDef().color());
 
+    Vec2f metaOffset(600, (getWindowHeight() * 0.5f) + 15);
+    
     if (mDrawingRect.getWidth() > 0)
     {
         gl::draw(mTargetTexture, Rectf(mTargetOffsetBottom.x,
@@ -365,74 +395,10 @@ void BestFontCVApp::draw()
         gl::color(ColorAf(1,1,0,0.5));
         gl::drawSolidRect(mDrawingRect);
     
+        // Draw the metadata
         if (mPopulation.getPopulation().size() > 0)
         {
-            // gl::setDefaultShaderVars();
-            gl::color(ColorAf(1,1,1,1));
-            
-            gl::pushMatrices();
-            GeneticFont & f = mPopulation.getFittestMember();
-            // Draw it over the mask
-            gl::translate(mDrawFittestOffset);
-            f.render();
-            gl::popMatrices();
-            
-            gl::enableAlphaBlending();
-
-            Vec2f outpOffset(600, 15);
-            
-            gl::pushMatrices();
-            gl::translate(outpOffset);
-            
-            const float kLineHeight = 20;
-            float yOff = 0;
-
-            Surface genCount = renderString("Generation: " + std::to_string(mPopulation.getGenerationCount()),
-                                            Font("Helvetica", 12),
-                                            ColorAf(0,0,0,1));
-            gl::TextureRef genTex = gl::Texture::create(genCount);
-            Vec2f texSize = genTex->getSize();
-            gl::draw(genTex, Rectf(0,
-                                   yOff,
-                                   texSize.x,
-                                   yOff + texSize.y));
-
-            yOff += kLineHeight;
-            
-            Surface score = renderString("Fitness: " + to_string(f.getCalculatedFitness()),
-                                         Font("Helvetica", 12),
-                                         ColorAf(0,0,0,1));
-            gl::TextureRef fitnessTex = gl::Texture::create(score);
-            texSize = fitnessTex->getSize();
-            gl::draw(fitnessTex, Rectf(0,
-                                       yOff,
-                                       texSize.x,
-                                       yOff + texSize.y));
-            
-            yOff += kLineHeight;
-            
-            Surface fontName = renderString(f.getFontName(),
-                                            Font("Helvetica", 12),
-                                            ColorAf(0,0,0,1));
-            gl::TextureRef nameTex = gl::Texture::create(fontName);
-            texSize = nameTex->getSize();
-            gl::draw(nameTex, Rectf(0,
-                                    yOff,
-                                    texSize.x,
-                                    yOff + texSize.y));
-
-            yOff += kLineHeight;
-            
-            Surface fontSize = renderString("Font Size: " + std::to_string(f.getFontSize()),
-                                            Font("Helvetica", 12),
-                                            ColorAf(0,0,0,1));
-            gl::TextureRef sizeTex = gl::Texture::create(fontSize);
-            texSize = sizeTex->getSize();
-            gl::draw(sizeTex, Rectf(0,
-                                    yOff,
-                                    texSize.x,
-                                    yOff + texSize.y));
-            gl::popMatrices();
+            drawMetadata(metaOffset);
         }
     }
     
@@ -452,11 +418,78 @@ void BestFontCVApp::draw()
     gl::TextureRef mutTex = gl::Texture::create(mutRate);
     Vec2f texSize = mutTex->getSize();
     gl::draw(mutTex, Rectf(250,
-                           15,
+                           metaOffset.y,
                            250 + texSize.x,
-                           15 + texSize.y));
+                           metaOffset.y + texSize.y));
+}
+
+void BestFontCVApp::drawMetadata(const Vec2f & offset)
+{
+    gl::color(ColorAf(1,1,1,1));
     
+    gl::pushMatrices();
+    GeneticFont & f = mPopulation.getFittestMember();
+    // Draw it over the mask
+    gl::translate(mDrawFittestOffset);
+    f.render();
+    gl::popMatrices();
     
+    gl::enableAlphaBlending();
+    
+    gl::pushMatrices();
+    gl::translate(offset);
+    
+    const float kLineHeight = 20;
+    float yOff = 0;
+    
+    // This is an annoying side-effect of using cinder dev.
+    // gl::drawString is not-yet implemented.
+    Surface genCount = renderString("Generation: " + std::to_string(mPopulation.getGenerationCount()),
+                                    Font("Helvetica", 12),
+                                    ColorAf(0,0,0,1));
+    gl::TextureRef genTex = gl::Texture::create(genCount);
+    Vec2f texSize = genTex->getSize();
+    gl::draw(genTex, Rectf(0,
+                           yOff,
+                           texSize.x,
+                           yOff + texSize.y));
+    
+    yOff += kLineHeight;
+    
+    Surface score = renderString("Fitness: " + to_string(f.getCalculatedFitness()),
+                                 Font("Helvetica", 12),
+                                 ColorAf(0,0,0,1));
+    gl::TextureRef fitnessTex = gl::Texture::create(score);
+    texSize = fitnessTex->getSize();
+    gl::draw(fitnessTex, Rectf(0,
+                               yOff,
+                               texSize.x,
+                               yOff + texSize.y));
+    
+    yOff += kLineHeight;
+    
+    Surface fontName = renderString(f.getFontName(),
+                                    Font("Helvetica", 12),
+                                    ColorAf(0,0,0,1));
+    gl::TextureRef nameTex = gl::Texture::create(fontName);
+    texSize = nameTex->getSize();
+    gl::draw(nameTex, Rectf(0,
+                            yOff,
+                            texSize.x,
+                            yOff + texSize.y));
+    
+    yOff += kLineHeight;
+    
+    Surface fontSize = renderString("Font Size: " + std::to_string(f.getFontSize()),
+                                    Font("Helvetica", 12),
+                                    ColorAf(0,0,0,1));
+    gl::TextureRef sizeTex = gl::Texture::create(fontSize);
+    texSize = sizeTex->getSize();
+    gl::draw(sizeTex, Rectf(0,
+                            yOff,
+                            texSize.x,
+                            yOff + texSize.y));
+    gl::popMatrices();
 }
 
 CINDER_APP_NATIVE( BestFontCVApp, RendererGl )

@@ -16,6 +16,7 @@
 		5323E6B60EAFCA7E003A9687 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B50EAFCA7E003A9687 /* QTKit.framework */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		A22D71C3698E4860A51D89C1 /* CinderApp.icns in Resources */ = {isa = PBXBuildFile; fileRef = E59191FFD677404281C65872 /* CinderApp.icns */; };
+		A963EE48185684C8003C2C3B /* button_pick.png in Resources */ = {isa = PBXBuildFile; fileRef = A963EE47185684C8003C2C3B /* button_pick.png */; };
 		A969C9B0183A92210030569D /* gallagher.jpg in Resources */ = {isa = PBXBuildFile; fileRef = A969C9AF183A92210030569D /* gallagher.jpg */; };
 		A969C9B3183A9BCF0030569D /* GeneticBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A969C9B1183A9BCF0030569D /* GeneticBase.cpp */; };
 		A969C9B6183A9C3B0030569D /* GeneticFont.mm in Sources */ = {isa = PBXBuildFile; fileRef = A969C9B4183A9C3B0030569D /* GeneticFont.mm */; };
@@ -38,6 +39,7 @@
 		5323E6B10EAFCA74003A9687 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = /System/Library/Frameworks/CoreVideo.framework; sourceTree = "<absolute>"; };
 		5323E6B50EAFCA7E003A9687 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = /System/Library/Frameworks/QTKit.framework; sourceTree = "<absolute>"; };
 		8D1107320486CEB800E47090 /* BestFontCV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BestFontCV.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A963EE47185684C8003C2C3B /* button_pick.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = button_pick.png; path = ../resources/button_pick.png; sourceTree = "<group>"; };
 		A969C9AF183A92210030569D /* gallagher.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = gallagher.jpg; path = ../resources/gallagher.jpg; sourceTree = "<group>"; };
 		A969C9B1183A9BCF0030569D /* GeneticBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GeneticBase.cpp; path = ../src/GeneticBase.cpp; sourceTree = "<group>"; };
 		A969C9B2183A9BCF0030569D /* GeneticBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GeneticBase.h; path = ../src/GeneticBase.h; sourceTree = "<group>"; };
@@ -155,6 +157,7 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				A963EE47185684C8003C2C3B /* button_pick.png */,
 				A9C5968918453DAA00C8DBDC /* gallagher_screenshot.png */,
 				A969C9AF183A92210030569D /* gallagher.jpg */,
 				E59191FFD677404281C65872 /* CinderApp.icns */,
@@ -240,6 +243,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A963EE48185684C8003C2C3B /* button_pick.png in Resources */,
 				A9C5968A18453DAA00C8DBDC /* gallagher_screenshot.png in Resources */,
 				A22D71C3698E4860A51D89C1 /* CinderApp.icns in Resources */,
 				A969C9B0183A92210030569D /* gallagher.jpg in Resources */,
