@@ -42,7 +42,8 @@ public:
         return mPopulation;
     }
     
-    // NOTE: This is the fittest member from the LAST batch.
+    // NOTE: This is the fittest member from ALL batches.
+    // It will never go down.
     T & getFittestMember()
     {
         return mFittestMember;
@@ -106,7 +107,10 @@ public:
             if (memberFitness > mPopMaxFitness)
             {
                 mPopMaxFitness = memberFitness;
-                mFittestMember = mPopulation[i];
+                if (memberFitness > mFittestMember.getCalculatedFitness())
+                {
+                    mFittestMember = mPopulation[i];
+                }
             }
         }
         
