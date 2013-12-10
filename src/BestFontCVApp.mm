@@ -27,7 +27,7 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-extern float gMutationRate = 0.05;
+extern float gMutationRate = 0.085;
 extern std::string gDisplayString = "";
 
 class BestFontCVApp : public AppNative
@@ -43,6 +43,7 @@ class BestFontCVApp : public AppNative
     void            mouseDrag(MouseEvent event);
     void            mouseUp(MouseEvent event);
     void            updateMutationSliderWithMousePos( Vec2i & mousePos );
+    void            finishTextSelection();
     void            keyUp(KeyEvent event);
     void            update();
     std::string     getImageText();
@@ -119,8 +120,9 @@ int BestFontCVApp::displayInstructions()
 void BestFontCVApp::setup()
 {
     mDrawingRect = Rectf(0,0,0,0);
+    mMousePositionStart = Vec2f(-1,-1);
     mShouldAdvance = false;
-    gMutationRate = 0.05f;
+    gMutationRate = 0.085f;
     mButtonTexture = gl::Texture::create(loadImage(getResourcePath("button_pick.png")));
     mDidPickFile = false;
     mDidDrawImage = false;
@@ -189,41 +191,74 @@ void BestFontCVApp::mouseDown( MouseEvent event )
         return;
     }
     
-    mSliderMutation.setIsActive(mSliderMutation.contains(mMousePosition));
-
-    if (mSliderMutation.getIsActive())
+    if (mMousePosition.y < getWindowHeight() * 0.5)
     {
-        updateMutationSliderWithMousePos(mMousePosition);
-        return;
+        // Top half: text selection
+        mMousePositionStart = mMousePosition;
+        mDrawingRect = Rectf(mMousePosition.x, mMousePosition.y,
+                             mMousePosition.x, mMousePosition.y);
+
     }
-    // else
-    mMousePositionStart = mMousePosition;
-    mDrawingRect = Rectf(mMousePosition.x, mMousePosition.y,
-                         mMousePosition.x, mMousePosition.y);
+    else
+    {
+        // Bottom half: slider
+        mMousePositionStart = Vec2f(-1,-1);
+        mSliderMutation.setIsActive(mSliderMutation.contains(mMousePosition));
+        if (mSliderMutation.getIsActive())
+        {
+            updateMutationSliderWithMousePos(mMousePosition);
+            return;
+        }
+    }
 }
 
 void BestFontCVApp::mouseDrag(MouseEvent event)
 {
     mMousePosition = event.getPos();
-    if (mSliderMutation.getIsActive())
+    
+    if (mMousePosition.y < getWindowHeight() * 0.5)
     {
-        updateMutationSliderWithMousePos(mMousePosition);
-        return;
+        // Top half: text selection
+        if (mMousePositionStart.x >= 0)
+        {
+            mDrawingRect = rectFromTwoPos(mMousePosition, mMousePositionStart);
+            mMousePositionEnd = mMousePosition;
+        }
     }
-    // else
-    mDrawingRect = rectFromTwoPos(mMousePosition, mMousePositionStart);
-    mMousePositionEnd = mMousePosition;
+    else if (mSliderMutation.getIsActive())
+    {
+        // Bottom half: slider
+        updateMutationSliderWithMousePos(mMousePosition);
+    }
 }
 
 void BestFontCVApp::mouseUp(MouseEvent event)
 {
-    if (mSliderMutation.getIsActive())
+    if (mMousePosition.y >= getWindowHeight() * 0.5)
     {
-        mSliderMutation.setValue(0.5f);
-        mSliderMutation.setIsActive(false);
-        return;
+        // Bottom half: slider
+        if (mSliderMutation.getIsActive())
+        {
+            mSliderMutation.setValue(0.5f);
+            mSliderMutation.setIsActive(false);
+        }
     }
-    // else
+    else
+    {
+        if (mMousePositionStart.x > 0)
+        {
+            finishTextSelection();
+        }
+    }
+    
+    mMousePositionStart = Vec2f(-1,-1);
+}
+
+#pragma mark - Text Selection
+
+void BestFontCVApp::finishTextSelection()
+{
+    // Top half: selection
     cv::Mat targetMat = toOcv(mTargetSurface);
     cv::Size inputSize = targetMat.size();
     float x = ci::math<float>::clamp(mDrawingRect.x1 - mTargetOffsetTop.x, 0, inputSize.width);
@@ -263,20 +298,21 @@ void BestFontCVApp::mouseUp(MouseEvent event)
             }
         }
     }
+    
     if (minX < maxX && minY < maxY)
     {
-        int width = maxX - minX;
-        int height = maxY - minY;
+        int width = (maxX - minX) + 1;
+        int height = (maxY - minY) + 1;
         Channel8u croppedChannel(width, height);
         croppedChannel.copyFrom(mTargetSelectionChan,
-                                Area(Vec2i(minX, minY), Vec2i(maxX, maxY)),
+                                Area(Vec2i(minX, minY), Vec2i(maxX + 1, maxY + 1)),
                                 Vec2i(-minX, -minY));
         mTargetSelectionChan = croppedChannel;
     }
     
     float halfHeight = getWindowHeight() * 0.5f;
     mDrawFittestOffset = mDrawingRect.getUpperLeft() + Vec2f(minX, minY + halfHeight);
-    
+
     mTargetSelectionTex = gl::Texture::create(Surface8u(mTargetSelectionChan));
     GeneticConstraintsRef gc = GeneticConstraints::getSharedConstraints();
     gc->maxPosX = mTargetSelectionChan.getWidth();
@@ -293,15 +329,6 @@ void BestFontCVApp::keyUp(cinder::app::KeyEvent event)
     {
         restartPopulation();
     }
-    else if (event.getCode() == KeyEvent::KEY_UP)
-    {
-        gMutationRate = gMutationRate + 0.01;
-    }
-    else if (event.getCode() == KeyEvent::KEY_DOWN)
-    {
-        gMutationRate = gMutationRate - 0.01;
-    }
-    console() << "MutationRate: " << gMutationRate << "\n";
 }
 
 #pragma mark - App Loop
@@ -317,15 +344,13 @@ void BestFontCVApp::update()
     {
         if (mShouldAdvance)
         {
-            console() << "Running generation " << mPopulation.getGenerationCount() << "\n";
-            
             // Evolution:
-            mPopulation.runGeneration([&](GeneticFont & font)// -> float
-            {
-                // Passes the image into the font for comparison
-                return font.calculateFitnessScalar(mTargetSelectionChan);
-            });
-            // mShouldAdvance = false;
+            const static int kNumBatchesPerGeneration = 6;
+            mPopulation.runGenerationBatch(kNumBatchesPerGeneration, [&](GeneticFont & font)// -> float
+                                           {
+                                               // Passes the image into the font for comparison
+                                               return font.calculateFitnessScalar(mTargetSelectionChan);
+                                           });
         }
     }
     

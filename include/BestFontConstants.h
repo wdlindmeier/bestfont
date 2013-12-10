@@ -9,7 +9,7 @@
 #ifndef BestFontCV_BestFontConstants_h
 #define BestFontCV_BestFontConstants_h
 
-const static int kInitialPopulationSize = 100; //100;
+const static int kInitialPopulationSize = 200; //100;
 extern float gMutationRate;
 extern std::string gDisplayString;
 const static int kPxWhitness = 250; //150;

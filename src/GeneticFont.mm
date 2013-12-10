@@ -143,11 +143,11 @@ void GeneticFont::expressGenes()
     }
     if (minX < maxX && minY < maxY)
     {
-        int width = maxX - minX;
-        int height = maxY - minY;
+        int width = (maxX - minX) + 1;
+        int height = (maxY - minY) + 1;
         Channel8u croppedChannel(width, height);
         croppedChannel.copyFrom(mChannel,
-                                Area(Vec2i(minX, minY), Vec2i(maxX, maxY)),
+                                Area(Vec2i(minX, minY), Vec2i(maxX + 1, maxY + 1)),
                                 Vec2i(-minX, -minY));
         mChannel = croppedChannel;
     }
@@ -165,9 +165,7 @@ double GeneticFont::calculateFitnessScalar(const ci::Channel8u & compareChan)
     mFitness = (abs(targetSize.x - mySize.x) + abs(targetSize.y - mySize.y)) * -1;
 
     long totalScore = 0;
-    //long numSamplePx = 0;
-    //long numTargetPx = 0;
-    
+
     // Iterate over self.
     // Compare pixels.
     for (int x = 0; x < mySize.x; ++x)
@@ -179,14 +177,7 @@ double GeneticFont::calculateFitnessScalar(const ci::Channel8u & compareChan)
             
             int selfVal = mChannel.getValue(selfPx);
             BOOL selfIsBlack = selfVal < kPxWhitness;
-            
-            /*
-            if (selfIsBlack)
-            {
-                numSamplePx += 1;
-            }
-            */
-            
+
             // Check if there's a sample
             if (targetPx.x >= 0 &&
                 targetPx.y >= 0 &&
@@ -217,24 +208,7 @@ double GeneticFont::calculateFitnessScalar(const ci::Channel8u & compareChan)
             }
         }
     }
-    /*
-    // Just counting pixels
-    for (int x = 0; x < targetSize.x; ++x)
-    {
-        for (int y = 0; y < targetSize.y; ++y)
-        {
-            Vec2i targetPx(x,y);
-            int targetVal = compareChan.getValue(targetPx);
-
-            BOOL targetIsPx = targetVal < kPxWhitness;
-            if (targetIsPx)
-            {
-                numTargetPx += 1;
-            }
-            // Not adding or subtracting score: That should be accounted for in the size weight.
-        }
-    }
-    */
+    
     mFitness += totalScore;
     
     // Make it scalar.
